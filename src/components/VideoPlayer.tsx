@@ -146,6 +146,8 @@ export const VideoPlayer = (props: {
       return;
     }
 
+    const wasActive = player.userActive();
+
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
       // Double tap detected
       if (tapTimeout.current) clearTimeout(tapTimeout.current);
@@ -173,9 +175,9 @@ export const VideoPlayer = (props: {
       // Single tap potential
       lastTap.current = now;
       tapTimeout.current = setTimeout(() => {
-        // Show controls on tap
+        // Toggle controls based on state when tap started
         if (player.controls()) {
-          player.userActive(true);
+          player.userActive(!wasActive);
         }
         lastTap.current = 0;
       }, DOUBLE_TAP_DELAY);
