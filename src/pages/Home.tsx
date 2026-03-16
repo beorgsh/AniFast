@@ -110,7 +110,7 @@ export default function Home() {
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-emerald-500/20 rounded-full blur-[100px] animate-top-to-left"></div>
       </div>
 
-      <div className="relative z-10 flex flex-col h-full max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 gap-8">
+      <div className="relative z-10 flex flex-col h-full max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 pb-12 gap-8">
         {/* Landing Page Header */}
         <div className="text-center space-y-3 mb-8 shrink-0">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
@@ -199,7 +199,7 @@ export default function Home() {
                   <Link
                     key={anime.id}
                     to={`/watch/${anime.session}`}
-                    state={{ title: anime.title }}
+                    state={{ title: anime.title, poster: anime.poster }}
                     className="group relative flex flex-col gap-2 sm:gap-3 rounded-xl overflow-hidden bg-zinc-900/50 p-2 sm:p-3 border border-zinc-800/50 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 backdrop-blur-sm"
                   >
                     <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-zinc-800">
@@ -209,22 +209,36 @@ export default function Home() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />
+                      <div className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-emerald-500/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[9px] sm:text-xs font-bold text-white uppercase tracking-wider">
+                        {anime.type}
+                      </div>
                       <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-black/80 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs font-medium text-amber-400 flex items-center gap-1">
                         <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400" />
                         {anime.score}
-                      </div>
-                      <div className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 bg-emerald-500/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[9px] sm:text-xs font-bold text-white uppercase tracking-wider">
-                        {anime.type}
                       </div>
                     </div>
                     <div className="flex flex-col gap-0.5 sm:gap-1">
                       <h3 className="font-semibold text-xs sm:text-sm line-clamp-2 text-zinc-200 group-hover:text-emerald-400 transition-colors">
                         {anime.title}
                       </h3>
-                      <p className="text-[10px] sm:text-xs text-zinc-500 flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-0">
-                        <span>{anime.year} • {anime.season}</span>
-                        <span>{anime.episodes} Eps</span>
+                      <p className="text-[10px] sm:text-xs text-zinc-500 flex items-center justify-center gap-1.5">
+                        <span>{anime.year}</span>
+                        <span>•</span>
+                        <span>{anime.season}</span>
+                        {anime.episodes > 0 && (
+                          <>
+                            <span>•</span>
+                            <span>{anime.episodes} Eps</span>
+                          </>
+                        )}
                       </p>
+                      <div className="w-full flex justify-center mt-0.5">
+                        {anime.episodes > 0 ? (
+                          <span className="text-emerald-400 font-medium text-[10px] sm:text-xs bg-emerald-500/10 px-2 py-0.5 rounded-full w-full text-center">Finished</span>
+                        ) : (
+                          <span className="text-amber-400 font-medium text-[10px] sm:text-xs bg-amber-500/10 px-2 py-0.5 rounded-full w-full text-center">Airing</span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 ))}
@@ -242,7 +256,7 @@ export default function Home() {
                   <Link
                     key={item.animeSession}
                     to={`/watch/${item.animeSession}/${item.episodeSession}`}
-                    state={{ title: item.animeTitle }}
+                    state={{ title: item.animeTitle, poster: item.thumbnail }}
                     className="group flex flex-row items-center gap-4 bg-zinc-900/40 border border-zinc-800/50 hover:bg-zinc-800/60 hover:border-zinc-700 rounded-xl p-3 transition-all"
                   >
                     <div className="relative w-32 sm:w-48 aspect-video rounded-lg overflow-hidden bg-zinc-800 shrink-0">
@@ -295,7 +309,7 @@ export default function Home() {
                     <Link
                       key={ep.id}
                       to={`/watch/${ep.anime_session}/${ep.session}`}
-                      state={{ title: ep.anime_title }}
+                      state={{ title: ep.anime_title, poster: ep.snapshot }}
                       className="group relative flex flex-row sm:flex-col items-center sm:items-stretch gap-3 sm:gap-3 rounded-xl overflow-hidden bg-zinc-900/40 sm:bg-zinc-900/50 p-2 sm:p-3 border border-zinc-800/30 sm:border-zinc-800/50 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 backdrop-blur-sm"
                     >
                       <div className="relative w-32 sm:w-full aspect-video rounded-lg overflow-hidden bg-zinc-800 shrink-0">

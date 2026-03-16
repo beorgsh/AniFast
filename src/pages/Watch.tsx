@@ -24,6 +24,7 @@ export default function Watch() {
   const navigate = useNavigate();
   const location = useLocation();
   const passedTitle = location.state?.title;
+  const passedPoster = location.state?.poster;
   const [data, setData] = useState<any>(null);
   const [info, setInfo] = useState<any>(null);
   const [episodes, setEpisodes] = useState<any[]>([]);
@@ -252,7 +253,7 @@ export default function Watch() {
         {/* Back Button */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors w-fit"
+          className="inline-flex items-center gap-2 text-zinc-400 hover:text-emerald-400 transition-all w-fit bg-transparent px-3 py-1.5 rounded-lg border border-zinc-800/30 hover:border-emerald-500/30"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Back to Home</span>
@@ -260,8 +261,9 @@ export default function Watch() {
 
         {/* Player and Controls */}
         <div className="sticky top-0 z-50 -mx-4 sm:-mx-6 lg:-mx-8 animate-fade-in-up">
-          {/* Glass Background with Fade */}
-          <div className="absolute inset-0 bg-zinc-950/95 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_85%,transparent)] pointer-events-none" />
+          {/* Refined Background: Fade at top, solid at bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-[150%] bg-zinc-950/90 backdrop-blur-2xl [mask-image:linear-gradient(to_top,black_0%,black_60%,transparent_100%)] pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-full bg-zinc-950/40 backdrop-blur-md [mask-image:linear-gradient(to_top,black_0%,transparent_100%)] pointer-events-none" />
           
           <div className="relative z-10 px-4 py-2 sm:px-6 lg:px-8 space-y-3">
             <div className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-emerald-900/10 border border-zinc-800/50">
@@ -311,7 +313,7 @@ export default function Watch() {
               <div className="relative">
                 <button
                   onClick={() => setIsPlayerDropdownOpen(!isPlayerDropdownOpen)}
-                  className="flex items-center gap-1 sm:gap-2 bg-zinc-900/80 hover:bg-zinc-800 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-zinc-800/50 text-zinc-300 transition-colors text-[10px] sm:text-sm font-medium whitespace-nowrap [-webkit-tap-highlight-color:transparent]"
+                  className="flex items-center gap-1 sm:gap-2 bg-transparent hover:bg-zinc-800/40 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-zinc-800/30 text-zinc-300 transition-colors text-[10px] sm:text-sm font-medium whitespace-nowrap [-webkit-tap-highlight-color:transparent]"
                 >
                   <span className="sm:hidden">{playerType === 'builtin' ? 'Built-in' : 'Embed'}</span>
                   <span className="hidden sm:inline">{playerType === 'builtin' ? 'Built-in Player' : 'Embed Player'}</span>
@@ -340,7 +342,7 @@ export default function Watch() {
               </div>
 
               {/* Sub/Dub Switch */}
-              <div className="flex items-center gap-1 sm:gap-2 bg-zinc-900/80 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-zinc-800/50 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 bg-transparent px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-zinc-800/30 shrink-0">
                 <span className={`text-[9px] sm:text-xs font-medium uppercase tracking-wider ${audioMode === 'sub' ? 'text-emerald-400' : 'text-zinc-500'}`}>Sub</span>
                 <button 
                   disabled={!hasDub} 
@@ -358,7 +360,7 @@ export default function Watch() {
               <button
                 onClick={handlePrevEpisode}
                 disabled={!prevEpisode}
-                className="p-1.5 sm:p-2 rounded-xl bg-zinc-900/80 border border-zinc-800/50 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 [-webkit-tap-highlight-color:transparent]"
+                className="p-1.5 sm:p-2 rounded-xl bg-transparent border border-zinc-800/30 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 [-webkit-tap-highlight-color:transparent]"
                 title="Previous Episode"
               >
                 <SkipBack className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
@@ -366,7 +368,7 @@ export default function Watch() {
               <button
                 onClick={handleNextEpisode}
                 disabled={!nextEpisode}
-                className="p-1.5 sm:p-2 rounded-xl bg-zinc-900/80 border border-zinc-800/50 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 [-webkit-tap-highlight-color:transparent]"
+                className="p-1.5 sm:p-2 rounded-xl bg-transparent border border-zinc-800/30 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 [-webkit-tap-highlight-color:transparent]"
                 title="Next Episode"
               >
                 <SkipForward className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
@@ -377,7 +379,7 @@ export default function Watch() {
                 className={`flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all text-[10px] sm:text-sm font-medium whitespace-nowrap active:scale-95 [-webkit-tap-highlight-color:transparent] ${
                   autoPlay 
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                    : 'bg-zinc-900/80 border-zinc-800/50 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30'
+                    : 'bg-transparent border-zinc-800/30 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30'
                 }`}
               >
                 {autoPlay ? <ToggleRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ToggleLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
@@ -421,7 +423,7 @@ export default function Watch() {
           <div className="py-6">
             {activeTab === 'overview' && (
               <div className="flex flex-col md:flex-row gap-8">
-                <img src={info?.poster} alt={cleanTitle} className="w-48 md:w-64 rounded-xl shadow-2xl object-cover shrink-0" referrerPolicy="no-referrer" />
+                <img src={info?.poster || passedPoster} alt={cleanTitle} className="w-48 md:w-64 rounded-xl shadow-2xl object-cover shrink-0" referrerPolicy="no-referrer" />
                 <div className="flex-1 space-y-4">
                   <div className="flex flex-wrap gap-4 text-sm text-zinc-400">
                     <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-400 fill-amber-400" /> {info?.score || 'N/A'}</span>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import Player from 'video.js/dist/types/player';
@@ -20,8 +21,10 @@ export const VideoPlayer = (props: {
   const playerRef = useRef<Player | null>(null);
   const { options, onReady, onEnded, onProgress, onNext, onPrev, animeTitle, episodeNumber, initialTime, isLoading } = props;
   
+  const [playerElement, setPlayerElement] = useState<HTMLDivElement | null>(null);
   const [showFeedback, setShowFeedback] = useState<'play' | 'pause' | 'forward' | 'rewind' | null>(null);
   const [isUserActive, setIsUserActive] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const feedbackTimeout = useRef<any>(null);
   const lastTap = useRef<number>(0);
   const tapTimeout = useRef<any>(null);
@@ -35,6 +38,7 @@ export const VideoPlayer = (props: {
 
       const mergedOptions = {
         ...options,
+        inactivityTimeout: 3000,
         controlBar: {
           pictureInPictureToggle: false,
           children: [
@@ -49,6 +53,7 @@ export const VideoPlayer = (props: {
       };
 
       const player = playerRef.current = videojs(videoElement, mergedOptions, () => {
+        setPlayerElement(videoElement as HTMLDivElement);
         // Remove tooltips (title attributes)
         const removeTitles = () => {
           if (!videoRef.current) return;
@@ -60,7 +65,21 @@ export const VideoPlayer = (props: {
         player.on('play', removeTitles);
         player.on('pause', removeTitles);
         player.on('volumechange', removeTitles);
-        player.on('fullscreenchange', removeTitles);
+        player.on('fullscreenchange', () => {
+          const isFS = player.isFullscreen();
+          setIsFullscreen(isFS);
+          removeTitles();
+
+          // Lock to landscape on mobile when entering fullscreen
+          const orientation = (screen as any).orientation;
+          if (isFS && orientation && orientation.lock) {
+            orientation.lock('landscape').catch((err: any) => {
+              console.log('Orientation lock failed:', err);
+            });
+          } else if (!isFS && orientation && orientation.unlock) {
+            orientation.unlock();
+          }
+        });
         player.on('useractive', () => setIsUserActive(true));
         player.on('userinactive', () => setIsUserActive(false));
         player.on('ended', () => {
@@ -154,9 +173,9 @@ export const VideoPlayer = (props: {
       // Single tap potential
       lastTap.current = now;
       tapTimeout.current = setTimeout(() => {
-        // Toggle controls
+        // Show controls on tap
         if (player.controls()) {
-          player.userActive(!player.userActive());
+          player.userActive(true);
         }
         lastTap.current = 0;
       }, DOUBLE_TAP_DELAY);
@@ -167,100 +186,122 @@ export const VideoPlayer = (props: {
     <div data-vjs-player className="absolute inset-0 w-full h-full bg-black group">
       <div ref={videoRef} className="w-full h-full" />
       
-      {/* Gesture Overlay */}
-      <div 
-        className="absolute inset-x-0 top-0 bottom-[50px] z-10 cursor-pointer [-webkit-tap-highlight-color:transparent]"
-        onClick={handleTouch}
-      >
-        {/* Top Controls Overlay */}
-        <div className={`absolute top-0 inset-x-0 p-4 flex items-start justify-between transition-opacity duration-300 z-20 ${isLoading ? 'opacity-0' : (isUserActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}`}>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
-              disabled={!onPrev}
-              className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-emerald-500/40 transition-all disabled:opacity-0 active:scale-95"
-            >
-              <SkipBack className="w-6 h-6" />
-            </button>
-            {(animeTitle || episodeNumber) && (
-              <div className="flex flex-col drop-shadow-lg">
-                <span className="text-white font-bold text-sm sm:text-base line-clamp-1 max-w-[200px] sm:max-w-[400px]">
-                  {animeTitle}
-                </span>
-                {episodeNumber && (
-                  <span className="text-emerald-400 font-medium text-[10px] sm:text-xs">
-                    Episode {episodeNumber}
-                  </span>
+      {playerElement && createPortal(
+        <>
+          {/* Gesture Overlay */}
+          <div 
+            className="absolute inset-x-0 top-0 bottom-[50px] z-10 cursor-pointer [-webkit-tap-highlight-color:transparent]"
+            onClick={handleTouch}
+          >
+            {/* Top Controls Overlay - Only show in fullscreen */}
+            <div className={`absolute top-0 inset-x-0 p-4 flex items-start justify-between transition-all duration-500 z-20 ${isLoading ? 'opacity-0' : (isUserActive && isFullscreen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none')}`}>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (playerRef.current?.isFullscreen()) {
+                      playerRef.current.exitFullscreen();
+                    } else {
+                      window.history.back();
+                    }
+                  }}
+                  className="p-1.5 rounded-full bg-transparent border border-white/10 text-white hover:bg-emerald-500/20 transition-all active:scale-95"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
+                    disabled={!onPrev}
+                    className="p-1.5 rounded-full bg-transparent border border-white/10 text-white hover:bg-emerald-500/20 transition-all disabled:opacity-0 active:scale-95"
+                  >
+                    <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  {(animeTitle || episodeNumber) && (
+                    <div className="flex flex-col drop-shadow-lg ml-0.5">
+                      <span className="text-white font-bold text-xs sm:text-base line-clamp-1 max-w-[180px] sm:max-w-[400px]">
+                        {animeTitle}
+                      </span>
+                      {episodeNumber && (
+                        <span className="text-emerald-400 font-medium text-[9px] sm:text-xs">
+                          Episode {episodeNumber}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onNext?.(); }}
+                disabled={!onNext}
+                className="p-2 rounded-full bg-transparent border border-white/10 text-white hover:bg-emerald-500/20 transition-all disabled:opacity-0 active:scale-95"
+              >
+                <SkipForward className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Loading Overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-4" />
+                <p className="text-zinc-300 font-medium animate-pulse">Loading Source...</p>
+              </div>
+            )}
+
+            {/* Feedback Icons */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Center Play/Pause */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {showFeedback === 'play' && (
+                  <Play className="w-16 h-16 text-white opacity-50 animate-scale-out" />
+                )}
+                {showFeedback === 'pause' && (
+                  <Pause className="w-16 h-16 text-white opacity-50 animate-scale-out" />
                 )}
               </div>
-            )}
-          </div>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onNext?.(); }}
-            disabled={!onNext}
-            className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-emerald-500/40 transition-all disabled:opacity-0 active:scale-95"
-          >
-            <SkipForward className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Loading Overlay */}
-        {isLoading && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-            <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-4" />
-            <p className="text-zinc-300 font-medium animate-pulse">Loading Source...</p>
-          </div>
-        )}
-
-        {/* Feedback Icons */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Center Play/Pause */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            {showFeedback === 'play' && (
-              <Play className="w-16 h-16 text-white opacity-50 animate-scale-out" />
-            )}
-            {showFeedback === 'pause' && (
-              <Pause className="w-16 h-16 text-white opacity-50 animate-scale-out" />
-            )}
-          </div>
-          {/* Left Rewind */}
-          <div className="absolute inset-y-0 left-12 flex items-center justify-center">
-            {showFeedback === 'rewind' && (
-              <div className="flex flex-col items-center animate-scale-out opacity-50 text-white">
-                <Rewind className="w-8 h-8" />
-                <span className="text-xs font-bold mt-1">-10s</span>
+              {/* Left Rewind */}
+              <div className="absolute inset-y-0 left-12 flex items-center justify-center">
+                {showFeedback === 'rewind' && (
+                  <div className="flex flex-col items-center animate-scale-out opacity-50 text-white">
+                    <Rewind className="w-8 h-8" />
+                    <span className="text-xs font-bold mt-1">-10s</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {/* Right Forward */}
-          <div className="absolute inset-y-0 right-12 flex items-center justify-center">
-            {showFeedback === 'forward' && (
-              <div className="flex flex-col items-center animate-scale-out opacity-50 text-white">
-                <FastForward className="w-8 h-8" />
-                <span className="text-xs font-bold mt-1">+10s</span>
+              {/* Right Forward */}
+              <div className="absolute inset-y-0 right-12 flex items-center justify-center">
+                {showFeedback === 'forward' && (
+                  <div className="flex flex-col items-center animate-scale-out opacity-50 text-white">
+                    <FastForward className="w-8 h-8" />
+                    <span className="text-xs font-bold mt-1">+10s</span>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </>,
+        playerElement
+      )}
 
       <style>{`
         /* Minimal Skin Overrides */
         .vjs-modern-skin .vjs-big-play-button {
-          background-color: rgba(16, 185, 129, 0.8) !important;
-          border: none !important;
+          background-color: rgba(16, 185, 129, 0.4) !important;
+          backdrop-blur: blur(4px) !important;
+          border: 1px solid rgba(16, 185, 129, 0.3) !important;
           border-radius: 50% !important;
           width: 80px !important;
           height: 80px !important;
           line-height: 80px !important;
           margin-top: -40px !important;
           margin-left: -40px !important;
-          transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out, transform 0.3s ease-in-out !important;
+          transition: all 0.3s ease-in-out !important;
         }
         
         .vjs-modern-skin:hover .vjs-big-play-button {
-          background-color: rgba(16, 185, 129, 1) !important;
+          background-color: rgba(16, 185, 129, 0.6) !important;
           transform: scale(1.1) !important;
+          border-color: rgba(16, 185, 129, 0.5) !important;
         }
 
         .vjs-modern-skin.vjs-has-started .vjs-big-play-button {
@@ -269,9 +310,9 @@ export const VideoPlayer = (props: {
         }
         
         .vjs-modern-skin .vjs-control-bar {
-          background: linear-gradient(to top, rgba(0,0,0,0.9), transparent) !important;
-          height: 50px !important;
-          padding: 0 15px !important;
+          background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%) !important;
+          height: 60px !important;
+          padding: 0 20px !important;
           display: flex !important;
           align-items: center !important;
           transition: opacity 0.3s ease-in, visibility 0.3s ease-in !important;

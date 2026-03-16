@@ -53,22 +53,36 @@ export default function Search() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium text-amber-400 flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-amber-400" />
-                    {anime.score}
-                  </div>
-                  <div className="absolute bottom-2 left-2 bg-emerald-500/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-white uppercase tracking-wider">
+                  <div className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-emerald-500/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[9px] sm:text-xs font-bold text-white uppercase tracking-wider">
                     {anime.type}
                   </div>
+                  <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-black/80 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs font-medium text-amber-400 flex items-center gap-1">
+                    <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400" />
+                    {anime.score}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5 sm:gap-1">
                   <h3 className="font-semibold text-xs sm:text-sm line-clamp-2 text-zinc-200 group-hover:text-emerald-400 transition-colors">
                     {anime.title}
                   </h3>
-                  <p className="text-[10px] sm:text-xs text-zinc-500 flex items-center justify-between">
-                    <span>{anime.year} • {anime.season}</span>
-                    <span>{anime.episodes} Eps</span>
+                  <p className="text-[10px] sm:text-xs text-zinc-500 flex items-center justify-center gap-1.5">
+                    <span>{anime.year}</span>
+                    <span>•</span>
+                    <span>{anime.season}</span>
+                    {anime.episodes > 0 && (
+                      <>
+                        <span>•</span>
+                        <span>{anime.episodes} Eps</span>
+                      </>
+                    )}
                   </p>
+                  <div className="w-full flex justify-center mt-0.5">
+                    {anime.episodes > 0 ? (
+                      <span className="text-emerald-400 font-medium text-[10px] sm:text-xs bg-emerald-500/10 px-2 py-0.5 rounded-full w-full text-center">Finished</span>
+                    ) : (
+                      <span className="text-amber-400 font-medium text-[10px] sm:text-xs bg-amber-500/10 px-2 py-0.5 rounded-full w-full text-center">Airing</span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
